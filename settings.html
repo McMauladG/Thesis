@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Settings - Municipal DRRMS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f4f7fa;
+      padding: 20px;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+    }
+
+    .section {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 30px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      margin-bottom: 10px;
+    }
+
+    label {
+      display: block;
+      margin-top: 10px;
+    }
+
+    input, select, textarea {
+      width: 98%;
+      padding: 10px;
+      margin-top: 5px;
+      margin-bottom: 15px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      padding: 10px 20px;
+      margin-top: 10px;
+      margin-right: 10px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #0056b3;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    th, td {
+      padding: 10px;
+      border: 1px solid #ccc;
+    }
+
+    th {
+      background: #007bff;
+      color: white;
+    }
+
+    .delete-btn {
+      background: #dc3545;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>⚙️ Settings</h1>
+
+  <!-- User Accounts Section -->
+  <div class="section">
+    <h2>Manage User Accounts</h2>
+    <form id="userForm">
+      <label>Username</label>
+      <input type="text" id="username" required>
+
+      <label>Password</label>
+      <input type="password" id="password" required>
+
+      <label>Role</label>
+      <select id="role" required>
+        <option value="Admin">Admin</option>
+        <option value="Staff">Staff</option>
+      </select>
+
+      <button type="submit">Add User</button>
+    </form>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Username</th>
+          <th>Role</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="userTable"></tbody>
+    </table>
+  </div>
+
+  <!-- Alert Template Section -->
+  <div class="section">
+    <h2>Alert Message Template</h2>
+    <label>Default Template</label>
+    <textarea id="alertTemplate" rows="4" placeholder="E.g. 'This is an official alert for [DisasterType] in [Barangay] on [Date]'"></textarea>
+    <button onclick="saveTemplate()">Save Template</button>
+  </div>
+
+  <!-- Backup / Restore Section -->
+  <div class="section">
+    <h2>Backup & Restore</h2>
+    <button onclick="backupData()">📥 Backup All Data</button>
+    <input type="file" id="restoreFile" accept=".json" onchange="restoreData(this)">
+  </div>
+
+  <script>
+    let users = JSON.parse(localStorage.getItem("users")) || [];
+    let alertTemplate = localStorage.getItem("alertTemplate") || "";
+
+    function renderUsers() {
+      const table = document.getElementById("userTable");
+      table.innerHTML = "";
+      users.forEach((user, index) => {
+        const row = `<tr>
+          <td>${user.username}</td>
+          <td>${user.role}</td>
+          <td><button class="delete-btn" onclick="deleteUser(${index})">Delete</button></td>
+        </tr>`;
+        table.innerHTML += row;
+      });
+      localStorage.setItem("users", JSON.stringify(users));
+    }
+
+    document.getElementById("userForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
+      const role = document.getElementById("role").value;
+      users.push({ username, password, role });
+      this.reset();
+      renderUsers();
+    });
+
+    function deleteUser(index) {
+      if (confirm("Delete this user?")) {
+        users.splice(index, 1);
+        renderUsers();
+      }
+    }
+
+    function saveTemplate() {
+      const template = document.getElementById("alertTemplate").value;
+      localStorage.setItem("alertTemplate", template);
+      alert("Template saved.");
+    }
+
+    function backupData() {
+      const backup = {
+        users,
+        alertTemplate,
+        reliefInventory: localStorage.getItem("reliefInventory"),
+        responseTeams: localStorage.getItem("responseTeams"),
+        preparednessActivities: localStorage.getItem("preparednessActivities"),
+        riskMaps: localStorage.getItem("riskMaps"),
+        reports: localStorage.getItem("incidentReports") // optional
+      };
+      const blob = new Blob([JSON.stringify(backup)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "drrms-backup.json";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+
+    function restoreData(input) {
+      const file = input.files[0];
+      const reader = new FileReader();
+      reader.onload = function() {
+        const data = JSON.parse(reader.result);
+        if (data.users) {
+          users = data.users;
+          localStorage.setItem("users", JSON.stringify(users));
+          renderUsers();
+        }
+        if (data.alertTemplate) {
+          localStorage.setItem("alertTemplate", data.alertTemplate);
+          document.getElementById("alertTemplate").value = data.alertTemplate;
+        }
+        if (data.reliefInventory) localStorage.setItem("reliefInventory", data.reliefInventory);
+        if (data.responseTeams) localStorage.setItem("responseTeams", data.responseTeams);
+        if (data.preparednessActivities) localStorage.setItem("preparednessActivities", data.preparednessActivities);
+        if (data.riskMaps) localStorage.setItem("riskMaps", data.riskMaps);
+        if (data.reports) localStorage.setItem("incidentReports", data.reports);
+        alert("Data restored successfully.");
+      };
+      reader.readAsText(file);
+    }
+
+    // Initial render
+    document.getElementById("alertTemplate").value = alertTemplate;
+    renderUsers();
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Relief Goods Inventory - Municipal DRRMS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f4f7fa;
+      padding: 20px;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    .form-section, .table-section {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 30px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    label {
+      display: block;
+      margin-top: 10px;
+    }
+
+    input, select {
+      width: 98%;
+      padding: 10px;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      margin-bottom: 15px;
+    }
+
+    button {
+      padding: 10px 20px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    button:hover {
+      background: #0056b3;
+    }
+
+    .low {
+      color: #dc3545;
+      font-weight: bold;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border: 1px solid #ccc;
+    }
+
+    th {
+      background: #007bff;
+      color: white;
+    }
+
+    td button {
+      padding: 5px 10px;
+      border: none;
+      margin-right: 5px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .issue-btn {
+      background: #ffc107;
+      color: black;
+    }
+
+    .delete-btn {
+      background: #dc3545;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🎒 Relief Goods Inventory</h1>
+
+  <!-- Add Item Form -->
+  <div class="form-section">
+    <h2>Add New Supply</h2>
+    <form id="inventoryForm">
+      <label>Item Name</label>
+      <input type="text" id="itemName" required>
+
+      <label>Category</label>
+      <select id="category" required>
+        <option value="Food">Food</option>
+        <option value="Water">Water</option>
+        <option value="Medicine">Medicine</option>
+        <option value="Other">Other</option>
+      </select>
+
+      <label>Quantity</label>
+      <input type="number" id="quantity" min="1" required>
+
+      <label>Low Stock Threshold</label>
+      <input type="number" id="threshold" min="1" required>
+
+      <button type="submit">Add Supply</button>
+    </form>
+  </div>
+
+  <!-- Inventory Table -->
+  <div class="table-section">
+    <h2>Supply Inventory</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Item</th>
+          <th>Category</th>
+          <th>Quantity</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="inventoryTable">
+        <!-- Rows go here -->
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    let inventory = JSON.parse(localStorage.getItem("reliefInventory")) || [];
+
+    function saveInventory() {
+      localStorage.setItem("reliefInventory", JSON.stringify(inventory));
+    }
+
+    function renderInventory() {
+      const table = document.getElementById("inventoryTable");
+      table.innerHTML = "";
+
+      inventory.forEach((item, index) => {
+        const row = document.createElement("tr");
+
+        const status = item.quantity <= item.threshold
+          ? `<td class="low">Low</td>` : `<td>OK</td>`;
+
+        row.innerHTML = `
+          <td>${item.name}</td>
+          <td>${item.category}</td>
+          <td>${item.quantity}</td>
+          ${status}
+          <td>
+            <button class="issue-btn" onclick="issueItem(${index})">Issue</button>
+            <button class="delete-btn" onclick="deleteItem(${index})">Delete</button>
+          </td>
+        `;
+
+        table.appendChild(row);
+      });
+
+      saveInventory();
+    }
+
+    document.getElementById("inventoryForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+
+      const name = document.getElementById("itemName").value;
+      const category = document.getElementById("category").value;
+      const quantity = parseInt(document.getElementById("quantity").value);
+      const threshold = parseInt(document.getElementById("threshold").value);
+
+      inventory.push({ name, category, quantity, threshold });
+
+      this.reset();
+      renderInventory();
+    });
+
+    function issueItem(index) {
+      const amount = prompt("Enter quantity to issue:", 1);
+      if (amount === null) return;
+
+      const issueQty = parseInt(amount);
+      if (isNaN(issueQty) || issueQty < 1) return alert("Invalid quantity.");
+
+      if (inventory[index].quantity < issueQty) {
+        alert("Not enough stock.");
+        return;
+      }
+
+      inventory[index].quantity -= issueQty;
+      renderInventory();
+    }
+
+    function deleteItem(index) {
+      if (confirm("Delete this supply item?")) {
+        inventory.splice(index, 1);
+        renderInventory();
+      }
+    }
+
+    // Initial render
+    renderInventory();
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Preparedness Activities - Municipal DRRMS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f4f7fa;
+      padding: 20px;
+    }
+
+    h1 {
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    .form-section, .table-section {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 30px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    label {
+      display: block;
+      margin-top: 10px;
+    }
+
+    input, textarea {
+      width: 98%;
+      padding: 10px;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      margin-bottom: 15px;
+    }
+
+    button {
+      padding: 10px 20px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #0056b3;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    th, td {
+      padding: 12px;
+      border: 1px solid #ccc;
+      text-align: left;
+    }
+
+    th {
+      background: #007bff;
+      color: white;
+    }
+
+    img.thumbnail {
+      width: 60px;
+      height: 50px;
+      object-fit: cover;
+      border-radius: 4px;
+    }
+
+    .file-link {
+      text-decoration: underline;
+      color: #007bff;
+      cursor: pointer;
+    }
+
+    .past {
+      background: #e9ecef;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>📆 Preparedness Activities</h1>
+
+  <!-- Add Event Form -->
+  <div class="form-section">
+    <h2>Add Activity</h2>
+    <form id="activityForm">
+      <label>Activity Title</label>
+      <input type="text" id="title" required>
+
+      <label>Date</label>
+      <input type="date" id="date" required>
+
+      <label>Description</label>
+      <textarea id="description" rows="3" required></textarea>
+
+      <label>Upload Documentation (Image or PDF)</label>
+      <input type="file" id="fileUpload" accept="image/*,.pdf">
+
+      <button type="submit">Add Activity</button>
+    </form>
+  </div>
+
+  <!-- Activity Table -->
+  <div class="table-section">
+    <h2>Scheduled Activities</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Date</th>
+          <th>Description</th>
+          <th>Documentation</th>
+        </tr>
+      </thead>
+      <tbody id="activityTable">
+        <!-- Entries will go here -->
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    let activities = JSON.parse(localStorage.getItem("preparednessActivities")) || [];
+
+    function saveActivities() {
+      localStorage.setItem("preparednessActivities", JSON.stringify(activities));
+    }
+
+    function renderActivities() {
+      const table = document.getElementById("activityTable");
+      table.innerHTML = "";
+
+      activities.forEach(activity => {
+        const row = document.createElement("tr");
+        const today = new Date().toISOString().split('T')[0];
+        if (activity.date < today) row.classList.add('past');
+
+        let docCell = 'None';
+        if (activity.fileType && activity.fileURL) {
+          if (activity.fileType.startsWith("image/")) {
+            docCell = `<img src="${activity.fileURL}" class="thumbnail">`;
+          } else {
+            docCell = `<a href="${activity.fileURL}" class="file-link" target="_blank">View File</a>`;
+          }
+        }
+
+        row.innerHTML = `
+          <td>${activity.title}</td>
+          <td>${activity.date}</td>
+          <td>${activity.description}</td>
+          <td>${docCell}</td>
+        `;
+
+        table.appendChild(row);
+      });
+
+      saveActivities();
+    }
+
+    document.getElementById("activityForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+
+      const title = document.getElementById("title").value;
+      const date = document.getElementById("date").value;
+      const description = document.getElementById("description").value;
+      const fileInput = document.getElementById("fileUpload");
+      const file = fileInput.files[0];
+
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function() {
+          const newActivity = {
+            title,
+            date,
+            description,
+            fileURL: reader.result,
+            fileType: file.type
+          };
+          activities.push(newActivity);
+          renderActivities();
+        };
+        reader.readAsDataURL(file);
+      } else {
+        activities.push({ title, date, description });
+        renderActivities();
+      }
+
+      this.reset();
+    });
+
+    // Initial Load
+    renderActivities();
+  </script>
+
+</body>
+</html>

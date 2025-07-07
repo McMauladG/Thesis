@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Reports & Statistics - Municipal DRRMS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f4f7fa;
+      padding: 20px;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+    }
+
+    .section {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 30px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    label, select {
+      display: block;
+      margin-bottom: 10px;
+    }
+
+    select {
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      width: 100%;
+    }
+
+    button {
+      padding: 10px 20px;
+      margin-top: 10px;
+      margin-right: 10px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #0056b3;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    th, td {
+      padding: 12px;
+      border: 1px solid #ccc;
+      text-align: left;
+    }
+
+    th {
+      background: #007bff;
+      color: white;
+    }
+
+    .chart {
+      margin-top: 30px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>📊 Reports & Statistics</h1>
+
+  <div class="section">
+    <h2>Filter Report</h2>
+    <label for="reportType">Report Type:</label>
+    <select id="reportType">
+      <option value="monthly">Monthly Summary</option>
+      <option value="disaster">By Disaster Type</option>
+    </select>
+
+    <label for="monthSelect">Month (for monthly reports):</label>
+    <select id="monthSelect">
+      <option value="">-- Select Month --</option>
+      <option value="01">January</option>
+      <option value="02">February</option>
+      <option value="03">March</option>
+      <option value="04">April</option>
+      <option value="05">May</option>
+      <option value="06">June</option>
+      <option value="07">July</option>
+      <option value="08">August</option>
+      <option value="09">September</option>
+      <option value="10">October</option>
+      <option value="11">November</option>
+      <option value="12">December</option>
+    </select>
+
+    <button onclick="generateReport()">Generate</button>
+    <button onclick="exportCSV()">Export CSV</button>
+  </div>
+
+  <div class="section">
+    <h2>Summary Report</h2>
+    <table id="reportTable">
+      <thead>
+        <tr>
+          <th>Disaster Type</th>
+          <th>Total Incidents</th>
+          <th>Avg Response Time (min)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Summary rows go here -->
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    const dummyData = [
+      { type: "Flood", date: "2025-07-05", responseTime: 40 },
+      { type: "Fire", date: "2025-07-01", responseTime: 25 },
+      { type: "Flood", date: "2025-06-28", responseTime: 60 },
+      { type: "Earthquake", date: "2025-06-15", responseTime: 120 },
+      { type: "Fire", date: "2025-06-12", responseTime: 30 }
+    ];
+
+    let reportRows = [];
+
+    function generateReport() {
+      const type = document.getElementById("reportType").value;
+      const month = document.getElementById("monthSelect").value;
+      let filtered = [...dummyData];
+
+      if (type === "monthly" && month) {
+        filtered = filtered.filter(d => d.date.split("-")[1] === month);
+      }
+
+      const grouped = {};
+
+      filtered.forEach(entry => {
+        if (!grouped[entry.type]) grouped[entry.type] = { count: 0, totalResponse: 0 };
+        grouped[entry.type].count++;
+        grouped[entry.type].totalResponse += entry.responseTime;
+      });
+
+      const tableBody = document.querySelector("#reportTable tbody");
+      tableBody.innerHTML = "";
+      reportRows = [];
+
+      for (const type in grouped) {
+        const avg = (grouped[type].totalResponse / grouped[type].count).toFixed(1);
+        const row = `<tr><td>${type}</td><td>${grouped[type].count}</td><td>${avg}</td></tr>`;
+        tableBody.innerHTML += row;
+        reportRows.push({ type, count: grouped[type].count, average: avg });
+      }
+    }
+
+    function exportCSV() {
+      if (reportRows.length === 0) {
+        alert("Please generate a report first.");
+        return;
+      }
+
+      let csv = "Disaster Type,Total Incidents,Average Response Time\n";
+      reportRows.forEach(r => {
+        csv += `${r.type},${r.count},${r.average}\n`;
+      });
+
+      const blob = new Blob([csv], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "disaster_report.csv";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+  </script>
+
+</body>
+</html>

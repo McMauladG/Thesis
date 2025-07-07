@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Risk Maps - Municipal DRRMS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f4f7fa;
+      padding: 20px;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+    }
+
+    .form-section, .table-section {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 30px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    label {
+      display: block;
+      margin-top: 10px;
+    }
+
+    input, select {
+      width: 98%;
+      padding: 10px;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      margin-bottom: 15px;
+    }
+
+    button {
+      padding: 10px 20px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #0056b3;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border: 1px solid #ccc;
+    }
+
+    th {
+      background: #007bff;
+      color: white;
+    }
+
+    img.thumbnail {
+      width: 100px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 4px;
+    }
+
+    .link {
+      color: #007bff;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🗺️ Risk Maps</h1>
+
+  <!-- Upload Map Form -->
+  <div class="form-section">
+    <h2>Add Hazard Map</h2>
+    <form id="mapForm">
+      <label>Map Title</label>
+      <input type="text" id="title" required>
+
+      <label>Map Type</label>
+      <select id="type">
+        <option value="Flood-Prone">Flood-Prone</option>
+        <option value="Landslide Zone">Landslide Zone</option>
+        <option value="Earthquake Risk">Earthquake Risk</option>
+        <option value="Others">Others</option>
+      </select>
+
+      <label>Upload Map (Image or PDF)</label>
+      <input type="file" id="mapFile" accept="image/*,.pdf">
+
+      <label>Or GIS Link (optional)</label>
+      <input type="url" id="gisLink" placeholder="https://...">
+
+      <button type="submit">Save Map</button>
+    </form>
+  </div>
+
+  <!-- Map Table -->
+  <div class="table-section">
+    <h2>Hazard Maps</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Type</th>
+          <th>Preview</th>
+          <th>GIS Link</th>
+        </tr>
+      </thead>
+      <tbody id="mapTable">
+        <!-- Map entries go here -->
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    let maps = JSON.parse(localStorage.getItem("riskMaps")) || [];
+
+    function saveMaps() {
+      localStorage.setItem("riskMaps", JSON.stringify(maps));
+    }
+
+    function renderMaps() {
+      const table = document.getElementById("mapTable");
+      table.innerHTML = "";
+
+      maps.forEach(map => {
+        let previewCell = "None";
+        if (map.fileType && map.fileData) {
+          if (map.fileType.startsWith("image/")) {
+            previewCell = `<img src="${map.fileData}" class="thumbnail">`;
+          } else {
+            previewCell = `<a href="${map.fileData}" target="_blank" class="link">View File</a>`;
+          }
+        }
+
+        let linkCell = map.gisLink ? `<a href="${map.gisLink}" class="link" target="_blank">Open GIS</a>` : "—";
+
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${map.title}</td>
+          <td>${map.type}</td>
+          <td>${previewCell}</td>
+          <td>${linkCell}</td>
+        `;
+        table.appendChild(row);
+      });
+
+      saveMaps();
+    }
+
+    document.getElementById("mapForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      const title = document.getElementById("title").value;
+      const type = document.getElementById("type").value;
+      const gisLink = document.getElementById("gisLink").value;
+      const fileInput = document.getElementById("mapFile");
+      const file = fileInput.files[0];
+
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function () {
+          maps.push({
+            title,
+            type,
+            fileType: file.type,
+            fileData: reader.result,
+            gisLink
+          });
+          renderMaps();
+        };
+        reader.readAsDataURL(file);
+      } else {
+        maps.push({ title, type, gisLink });
+        renderMaps();
+      }
+
+      this.reset();
+    });
+
+    // Load existing maps
+    renderMaps();
+  </script>
+
+</body>
+</html>

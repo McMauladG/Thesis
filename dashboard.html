@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard - Municipal DRRMS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    body {
+      background-color: #f4f7fa;
+      padding: 20px;
+    }
+
+    h1 {
+      margin-bottom: 10px;
+      color: #333;
+    }
+
+    /* Alert Banner */
+    .alert-banner {
+      background: #fff3cd;
+      border-left: 6px solid #ffc107;
+      color: #856404;
+      padding: 15px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+    }
+
+    /* Summary Cards */
+    .cards {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-bottom: 30px;
+    }
+
+    .card {
+      flex: 1;
+      min-width: 220px;
+      background: white;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    .card h3 {
+      font-size: 16px;
+      color: #666;
+    }
+
+    .card h2 {
+      font-size: 28px;
+      color: #007bff;
+    }
+
+    .card:nth-child(2) h2 {
+      color: #28a745;
+    }
+
+    .card:nth-child(3) h2 {
+      color: #ffc107;
+    }
+
+    /* Chart Layout */
+    .charts {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 30px;
+    }
+
+    .chart-container {
+      flex: 1;
+      min-width: 300px;
+      background: white;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    canvas {
+      max-width: 100%;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>📊 Dashboard</h1>
+
+  <!-- Alert -->
+  <div class="alert-banner">
+    <strong>⚠️ Tropical Storm Alert:</strong> Storm warning issued in Barangay Bayog. Please evacuate low-lying areas immediately.
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="cards">
+    <div class="card">
+      <h3>📄 Incident Reports</h3>
+      <h2>32</h2>
+    </div>
+    <div class="card">
+      <h3>🎒 Relief Supplies</h3>
+      <h2>1,256 Items</h2>
+    </div>
+    <div class="card">
+      <h3>👷 Active Personnel</h3>
+      <h2>78</h2>
+    </div>
+  </div>
+
+  <!-- Charts -->
+  <div class="charts">
+    <div class="chart-container">
+      <h4>📈 Disaster Occurrences (Last 6 Months)</h4>
+      <canvas id="disasterChart"></canvas>
+    </div>
+    <div class="chart-container">
+      <h4>⏱️ Avg. Response Time (Minutes)</h4>
+      <canvas id="responseChart"></canvas>
+    </div>
+  </div>
+
+  <script>
+    // Chart 1: Disaster Occurrences
+    const ctx1 = document.getElementById('disasterChart').getContext('2d');
+    new Chart(ctx1, {
+      type: 'bar',
+      data: {
+        labels: ['Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
+        datasets: [{
+          label: 'Occurrences',
+          data: [4, 7, 3, 5, 6, 2],
+          backgroundColor: '#007bff'
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          y: { beginAtZero: true }
+        }
+      }
+    });
+
+    // Chart 2: Response Time
+    const ctx2 = document.getElementById('responseChart').getContext('2d');
+    new Chart(ctx2, {
+      type: 'line',
+      data: {
+        labels: ['Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
+        datasets: [{
+          label: 'Minutes',
+          data: [30, 27, 25, 22, 20, 18],
+          fill: true,
+          borderColor: '#28a745',
+          backgroundColor: 'rgba(40,167,69,0.2)'
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: { beginAtZero: true }
+        }
+      }
+    });
+  </script>
+
+</body>
+</html>

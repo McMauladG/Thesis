@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Resident Information - Municipal DRRMS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f4f7fa;
+      padding: 20px;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    .form-section, .filter-section, .table-section {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 30px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    label {
+      display: block;
+      margin-top: 10px;
+    }
+
+    input, select {
+      width: 98%;
+      padding: 10px;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      margin-bottom: 15px;
+    }
+
+    button {
+      padding: 10px 20px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    button:hover {
+      background: #0056b3;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 12px;
+      border: 1px solid #ccc;
+      text-align: left;
+    }
+
+    th {
+      background: #007bff;
+      color: white;
+    }
+
+    td button {
+      background: #ffc107;
+      color: black;
+      border: none;
+      padding: 5px 10px;
+      margin-right: 5px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    td button.delete {
+      background: #dc3545;
+      color: white;
+    }
+
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    @media(max-width: 600px) {
+      .filters {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🧑‍🤝‍🧑 Resident Information</h1>
+
+  <!-- Add Resident Form -->
+  <div class="form-section">
+    <h2>Add / Edit Resident</h2>
+    <form id="residentForm">
+      <input type="hidden" id="editIndex">
+      <label>Full Name</label>
+      <input type="text" id="fullName" required>
+
+      <label>Barangay</label>
+      <input type="text" id="barangay" required>
+
+      <label>Vulnerability Group</label>
+      <select id="vulnerability">
+        <option value="">None</option>
+        <option value="PWD">PWD</option>
+        <option value="Elderly">Elderly</option>
+        <option value="Pregnant">Pregnant</option>
+      </select>
+
+      <button type="submit">Save Resident</button>
+    </form>
+  </div>
+
+  <!-- Filters -->
+  <div class="filter-section">
+    <h2>Filter Residents</h2>
+    <div class="filters">
+      <div>
+        <label>Filter by Barangay:</label>
+        <input type="text" id="filterBarangay" placeholder="e.g., Bayog">
+      </div>
+      <div>
+        <label>Filter by Vulnerability:</label>
+        <select id="filterVulnerability">
+          <option value="">All</option>
+          <option value="PWD">PWD</option>
+          <option value="Elderly">Elderly</option>
+          <option value="Pregnant">Pregnant</option>
+        </select>
+      </div>
+      <div style="align-self: flex-end; margin-bottom: 15px;">
+        <button onclick="applyFilters()">Apply Filters</button>
+        <button onclick="clearFilters()" style="background: #6c757d;">Clear</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Resident Table -->
+  <div class="table-section">
+    <h2>Resident List</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Full Name</th>
+          <th>Barangay</th>
+          <th>Vulnerability</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="residentTable">
+        <!-- Rows here -->
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    let residents = JSON.parse(localStorage.getItem("residents")) || [];
+
+    function saveToStorage() {
+      localStorage.setItem("residents", JSON.stringify(residents));
+    }
+
+    function renderTable(data = residents) {
+      const table = document.getElementById("residentTable");
+      table.innerHTML = "";
+
+      data.forEach((res, index) => {
+        const row = document.createElement("tr");
+
+        row.innerHTML = `
+          <td>${res.fullName}</td>
+          <td>${res.barangay}</td>
+          <td>${res.vulnerability || 'None'}</td>
+          <td>
+            <button onclick="editResident(${index})">Edit</button>
+            <button class="delete" onclick="deleteResident(${index})">Delete</button>
+          </td>
+        `;
+
+        table.appendChild(row);
+      });
+    }
+
+    document.getElementById("residentForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const fullName = document.getElementById("fullName").value;
+      const barangay = document.getElementById("barangay").value;
+      const vulnerability = document.getElementById("vulnerability").value;
+      const editIndex = document.getElementById("editIndex").value;
+
+      const resident = { fullName, barangay, vulnerability };
+
+      if (editIndex === "") {
+        residents.push(resident);
+      } else {
+        residents[editIndex] = resident;
+        document.getElementById("editIndex").value = "";
+      }
+
+      this.reset();
+      saveToStorage();
+      renderTable();
+    });
+
+    function editResident(index) {
+      const res = residents[index];
+      document.getElementById("fullName").value = res.fullName;
+      document.getElementById("barangay").value = res.barangay;
+      document.getElementById("vulnerability").value = res.vulnerability;
+      document.getElementById("editIndex").value = index;
+    }
+
+    function deleteResident(index) {
+      if (confirm("Delete this resident?")) {
+        residents.splice(index, 1);
+        saveToStorage();
+        renderTable();
+      }
+    }
+
+    function applyFilters() {
+      const barangayFilter = document.getElementById("filterBarangay").value.toLowerCase();
+      const vulnerabilityFilter = document.getElementById("filterVulnerability").value;
+
+      const filtered = residents.filter(res => {
+        const barangayMatch = barangayFilter === "" || res.barangay.toLowerCase().includes(barangayFilter);
+        const vulnerabilityMatch = vulnerabilityFilter === "" || res.vulnerability === vulnerabilityFilter;
+        return barangayMatch && vulnerabilityMatch;
+      });
+
+      renderTable(filtered);
+    }
+
+    function clearFilters() {
+      document.getElementById("filterBarangay").value = "";
+      document.getElementById("filterVulnerability").value = "";
+      renderTable();
+    }
+
+    // Initial load
+    renderTable();
+  </script>
+
+</body>
+</html>

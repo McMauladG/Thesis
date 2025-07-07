@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Response Teams - Municipal DRRMS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f4f7fa;
+      padding: 20px;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    .form-section, .filter-section, .table-section {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 30px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    label {
+      display: block;
+      margin-top: 10px;
+    }
+
+    input, select {
+      width: 98%;
+      padding: 10px;
+      margin-top: 5px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    button {
+      padding: 10px 20px;
+      background: #28a745;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    button:hover {
+      background: #218838;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border: 1px solid #ccc;
+    }
+
+    th {
+      background: #007bff;
+      color: white;
+    }
+
+    td button {
+      padding: 5px 10px;
+      margin-right: 5px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .edit-btn {
+      background: #ffc107;
+      color: black;
+    }
+
+    .delete-btn {
+      background: #dc3545;
+      color: white;
+    }
+
+    .filters {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>👷 Response Teams</h1>
+
+  <!-- Add / Edit Responder -->
+  <div class="form-section">
+    <h2>Add / Update Responder</h2>
+    <form id="responderForm">
+      <input type="hidden" id="editIndex">
+      <label>Full Name</label>
+      <input type="text" id="name" required>
+
+      <label>Barangay</label>
+      <input type="text" id="barangay" required>
+
+      <label>Contact Number</label>
+      <input type="text" id="contact" required>
+
+      <label>Assigned Task</label>
+      <input type="text" id="task" placeholder="Search & Rescue, First Aid, etc." required>
+
+      <button type="submit">Save Responder</button>
+    </form>
+  </div>
+
+  <!-- Filter by Barangay -->
+  <div class="filter-section">
+    <h2>Filter by Barangay</h2>
+    <div class="filters">
+      <input type="text" id="filterBarangay" placeholder="Enter barangay name...">
+      <button onclick="applyFilter()">Apply Filter</button>
+      <button onclick="clearFilter()" style="background:#6c757d;">Clear</button>
+    </div>
+  </div>
+
+  <!-- Responder Table -->
+  <div class="table-section">
+    <h2>Response Team Directory</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Barangay</th>
+          <th>Contact</th>
+          <th>Task</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="responderTable">
+        <!-- Rows inserted here -->
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    let responders = JSON.parse(localStorage.getItem("responseTeams")) || [];
+
+    function saveResponders() {
+      localStorage.setItem("responseTeams", JSON.stringify(responders));
+    }
+
+    function renderTable(data = responders) {
+      const table = document.getElementById("responderTable");
+      table.innerHTML = "";
+
+      data.forEach((res, index) => {
+        const row = document.createElement("tr");
+
+        row.innerHTML = `
+          <td>${res.name}</td>
+          <td>${res.barangay}</td>
+          <td>${res.contact}</td>
+          <td>${res.task}</td>
+          <td>
+            <button class="edit-btn" onclick="editResponder(${index})">Edit</button>
+            <button class="delete-btn" onclick="deleteResponder(${index})">Delete</button>
+          </td>
+        `;
+
+        table.appendChild(row);
+      });
+
+      saveResponders();
+    }
+
+    document.getElementById("responderForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+      const name = document.getElementById("name").value;
+      const barangay = document.getElementById("barangay").value;
+      const contact = document.getElementById("contact").value;
+      const task = document.getElementById("task").value;
+      const editIndex = document.getElementById("editIndex").value;
+
+      const entry = { name, barangay, contact, task };
+
+      if (editIndex === "") {
+        responders.push(entry);
+      } else {
+        responders[editIndex] = entry;
+        document.getElementById("editIndex").value = "";
+      }
+
+      this.reset();
+      renderTable();
+    });
+
+    function editResponder(index) {
+      const res = responders[index];
+      document.getElementById("name").value = res.name;
+      document.getElementById("barangay").value = res.barangay;
+      document.getElementById("contact").value = res.contact;
+      document.getElementById("task").value = res.task;
+      document.getElementById("editIndex").value = index;
+    }
+
+    function deleteResponder(index) {
+      if (confirm("Delete this responder?")) {
+        responders.splice(index, 1);
+        renderTable();
+      }
+    }
+
+    function applyFilter() {
+      const barangayFilter = document.getElementById("filterBarangay").value.toLowerCase();
+      const filtered = responders.filter(r => r.barangay.toLowerCase().includes(barangayFilter));
+      renderTable(filtered);
+    }
+
+    function clearFilter() {
+      document.getElementById("filterBarangay").value = "";
+      renderTable();
+    }
+
+    // Initial render
+    renderTable();
+  </script>
+
+</body>
+</html>

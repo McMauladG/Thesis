@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Disaster Alerts - Municipal DRRMS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f4f7fa;
+    }
+
+    h1 {
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    .current-alerts, .issue-alert {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      margin-bottom: 30px;
+    }
+
+    .alert-card {
+      border-left: 5px solid #dc3545;
+      background: #ffe2e6;
+      padding: 15px;
+      margin-bottom: 15px;
+      border-radius: 5px;
+    }
+
+    .alert-card.typhoon { border-left-color: #007bff; background: #dfeeff; }
+    .alert-card.flood { border-left-color: #17a2b8; background: #def5f9; }
+    .alert-card.fire { border-left-color: #fd7e14; background: #ffe9d9; }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: #444;
+    }
+
+    select, textarea, input[type="text"], button {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background: #0056b3;
+    }
+
+    .links {
+      margin-top: 10px;
+    }
+
+    .links a {
+      text-decoration: none;
+      color: #17a2b8;
+      display: inline-block;
+      margin-right: 15px;
+    }
+
+  </style>
+</head>
+<body>
+
+  <h1>📢 Disaster Alerts</h1>
+
+  <!-- View Current Alerts -->
+  <div class="current-alerts">
+    <h2>Active Alerts</h2>
+
+    <div class="alert-card typhoon">
+      <strong>🌪️ Typhoon Alert:</strong> Signal #2 issued in Northern Zone. Classes suspended. Evacuate coastal areas.
+    </div>
+
+    <div class="alert-card flood">
+      <strong>🌊 Flood Warning:</strong> River overflow expected in Barangay Bayog. Evacuate low-lying homes.
+    </div>
+
+    <div class="alert-card fire">
+      <strong>🔥 Fire Risk:</strong> Grass fire reported in Barangay Tulay. Firefighters dispatched.
+    </div>
+  </div>
+
+  <!-- Issue New Alert -->
+  <div class="issue-alert">
+    <h2>Issue New Alert</h2>
+    <form id="alertForm">
+      <label for="type">Alert Type</label>
+      <select id="type" required>
+        <option value="">-- Select Type --</option>
+        <option value="typhoon">🌪️ Typhoon</option>
+        <option value="flood">🌊 Flood</option>
+        <option value="fire">🔥 Fire</option>
+        <option value="earthquake">🌍 Earthquake</option>
+        <option value="landslide">⛰️ Landslide</option>
+      </select>
+
+      <label for="location">Location</label>
+      <input type="text" id="location" placeholder="Enter affected area..." required>
+
+      <label for="message">Message</label>
+      <textarea id="message" rows="4" placeholder="Enter alert message..." required></textarea>
+
+      <button type="submit">Broadcast Alert</button>
+    </form>
+  </div>
+
+  <!-- Links to Warning Systems -->
+  <div class="links">
+    <strong>🌐 External Warning Systems:</strong><br>
+    <a href="https://bagong.pagasa.dost.gov.ph/" target="_blank">PAGASA Weather</a>
+    <a href="https://phivolcs.dost.gov.ph/" target="_blank">PHIVOLCS Earthquake Alerts</a>
+    <a href="https://www.ndrrmc.gov.ph/" target="_blank">NDRRMC Warnings</a>
+  </div>
+
+  <script>
+    const form = document.getElementById('alertForm');
+
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const type = document.getElementById('type').value;
+      const location = document.getElementById('location').value;
+      const message = document.getElementById('message').value;
+
+      if (!type || !location || !message) {
+        alert('Please fill out all fields.');
+        return;
+      }
+
+      alert("✅ Alert Broadcasted!\n\nType: " + type + "\nLocation: " + location + "\nMessage: " + message);
+
+      // Optional: Add logic to display new alert on the page
+      // or save to localStorage/server.
+      
+      form.reset();
+    });
+  </script>
+
+</body>
+</html>
